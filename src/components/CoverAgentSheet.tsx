@@ -68,6 +68,10 @@ const CovertAgentSheet: React.FC = () => {
   const ASPECT_RATIO = 9 / 16
   const MIN_CROP_SIZE = 40
 
+  // 追踪最高醉意值和独立生命值
+  const [maxIntoxication, setMaxIntoxication] = useState(0)
+  const [currentHealth, setCurrentHealth] = useState(10)
+
   const handleAvatarSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0]
     if (!file) return
@@ -487,12 +491,32 @@ const CovertAgentSheet: React.FC = () => {
                     type="number"
                     className="numeric-input"
                     value={agent.currentIntoxication}
-                    onChange={(e) => setAgent(prev => ({...prev, currentIntoxication: parseInt(e.target.value) || 0}))}
+                    onChange={(e) => {
+                      const newIntoxication = parseInt(e.target.value) || 0
+                      setAgent(prev => ({...prev, currentIntoxication: newIntoxication}))
+                      // 当醉意值增加时，更新最高醉意值和生命值
+                      if (newIntoxication > maxIntoxication) {
+                        setMaxIntoxication(newIntoxication)
+                        setCurrentHealth(10 + newIntoxication)
+                      }
+                    }}
                     placeholder="输入当前醉意值"
                   />
                   <div className="token-controls">
-                    <button onClick={() => setAgent(prev => ({...prev, currentIntoxication: Math.max(0, prev.currentIntoxication - 1)}))}>-</button>
-                    <button onClick={() => setAgent(prev => ({...prev, currentIntoxication: prev.currentIntoxication + 1}))}>+</button>
+                    <button onClick={() => {
+                      setAgent(prev => ({...prev, currentIntoxication: Math.max(0, prev.currentIntoxication - 1)}))
+                    }}>-</button>
+                    <button onClick={() => {
+                      setAgent(prev => {
+                        const newIntoxication = prev.currentIntoxication + 1
+                        // 当醉意值增加时，同步增加生命值
+                        if (newIntoxication > maxIntoxication) {
+                          setMaxIntoxication(newIntoxication)
+                          setCurrentHealth(10 + newIntoxication)
+                        }
+                        return {...prev, currentIntoxication: newIntoxication}
+                      })
+                    }}>+</button>
                   </div>
                 </div>
               </div>
@@ -520,13 +544,16 @@ const CovertAgentSheet: React.FC = () => {
                   <input
                     type="number"
                     className="numeric-input"
-                    value={10 + agent.currentIntoxication}
-                    readOnly
-                    placeholder="自动计算: 10 + 醉意值"
+                    value={currentHealth}
+                    onChange={(e) => {
+                      const newHealth = Math.max(1, parseInt(e.target.value) || 1)
+                      setCurrentHealth(newHealth)
+                    }}
+                    placeholder="手动编辑生命值"
                   />
                   <div className="token-controls">
-                    <button onClick={() => setAgent(prev => ({...prev, currentIntoxication: Math.max(0, prev.currentIntoxication - 1)}))}>-</button>
-                    <button onClick={() => setAgent(prev => ({...prev, currentIntoxication: prev.currentIntoxication + 1}))}>+</button>
+                    <button onClick={() => setCurrentHealth(prev => Math.max(0, prev - 1))}>-</button>
+                    <button onClick={() => setCurrentHealth(prev => prev + 1)}>+</button>
                   </div>
                 </div>
               </div>
