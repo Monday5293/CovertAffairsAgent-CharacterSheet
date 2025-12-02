@@ -545,6 +545,7 @@ const CovertAgentSheet: React.FC = () => {
                     type="number"
                     className="numeric-input"
                     value={currentHealth}
+                    
                     onChange={(e) => {
                       const newHealth = Math.max(1, parseInt(e.target.value) || 1)
                       setCurrentHealth(newHealth)
